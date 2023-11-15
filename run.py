@@ -6,32 +6,29 @@ global htc_file_name, root_results, case_name, overwrite_existing_case, opt_file
 
 if __name__ == "__main__":
 	hawc_type = "hawc2mb"  # can be 'hawc2s' or 'hawc2mb'
-	dir_htc_relates_to = "../data/HAWC/input"  # path from this file to the directory the file paths in the .htc file
+	dir_htc_relates_to = "data/input"  # path from this file to the directory the file paths in the .htc file
 	# relate to
 	
-	htc_file_name = "Redesign_hawc2_flex_2step"  # htc file name w/o extension in the htc dir
+	htc_file_name = "Redesign_hawc2_flex"  # htc file name w/o extension in the htc dir
 	root_results = "../output"
-	case_name = "test_hawc2"
+	case_name = "hawc2_sim"
 	overwrite_existing_case = True
-	skip_safety_warning = False  # Danger-setting: if set to True, disable safety check for overwriting cases.
 	opt_file_to_be_saved = None
 	
 	change_param_type = "simultaneously"  # "simultaneously" or "consecutively"
-	n_parallel_processes = 4  # check yourself before you shrek yourself. I.e., check your CPU and RAM before you fry
+	n_parallel_processes = 2  # check yourself before you shrek yourself. I.e., check your CPU and RAM before you fry
 	# your PC with too many processes
 	
-	# Parameters that ought to be changed must be given as an iterable of the different values they should be. Since, e.g.,
-	# "windspeed"'s values are a list, they would need to be specified as a list of lists. If no changes are wanted then
-	# every key must be commented out.
+	# Parameters that ought to be changed must be given as an iterable of the different values they should be. Since,
+	# e.g., "windspeed"'s values are a list, they would need to be specified as a list of lists. If no changes are
+	# wanted then every key must be commented out.
 	freq = np.round(np.linspace(0.02, 0.05, 2), 2)
 	damping = np.round(np.linspace(0.1, 0.9, 3), 1)
-	# freq = [0.034, 0.038, 0.042, 0.046]
-	# damping = [0.75, 0.8, 0.85, 0.95]
 	change_params = {
 			"hawcstab2": {
 					"operational_data" : {
-							# "opt_lambda": np.arange(7, 14).tolist(),
-							# "minpitch": np.arange(3, 7).tolist()
+							# "opt_lambda": np.arange(7, 9).tolist(),
+							# "minpitch": np.arange(3, 5).tolist()
 					},
 					"controller_tuning": {
 							# "partial_load": [list(to_list) for to_list in list(itertools.product(freq, damping))],
@@ -47,20 +44,20 @@ if __name__ == "__main__":
 					}
 			}
 	}
-	# Here, specify as a list of tuples the .opt files that you want to take a slice off (1st entry of each tuple) and as a
-	# tuple the wind speed range you want the slice to be (2nd entry of each tuple).
+	# Here, specify as a list of tuples the .opt files that you want to take a slice off (1st entry of each tuple) and
+	# as a tuple the wind speed range you want the slice to be (2nd entry of each tuple).
 	change_opt_file = [
 			# [os.path.join(root_results, case_name, f"opt_lambda_{tsr}/test.opt"), (5, 5)] for tsr in np.arange(7, 14)
 	]
 	
-	case_dir = "../data/HAWC/output/test_hawc2"
+	case_dir = "data/output/ctrl_optimisation"
 	incorporate_ctrl_tuning = [
-			os.path.join(root_results, "test_hawc2", dir_name, "test_hawc2_ctrl_tuning.txt")
+			os.path.join("../output/ctrl_optimisation", dir_name, "ctrl_optimisation_ctrl_tuning.txt")
 			for dir_name in os.listdir(case_dir)
 	]
 	
 	hawc2_use_from_hawc2s = [
-			("hawcstab2.controller_tuning.constant_power", "dll.type2_dll.init.constant__15"),
+			# ("hawcstab2.controller_tuning.constant_power", "dll.type2_dll.init.constant__15"),
 	]
 # --------------------- end of user input ---------------------
 
@@ -195,14 +192,16 @@ class Utils(IterDict):
 		for data_dir in dirs_with_wanted_data:
 			files_in_dir = [file for file in os.listdir(data_dir) if os.path.isfile(os.path.join(data_dir, file))]
 			file_extensions = {file[file.rfind("."):] for file in files_in_dir if
-			                   file[file.rfind("."):] not in [".htc"]}
+							   file[file.rfind("."):] not in [".htc"]}
 			for file_extension in file_extensions:
 				files_with_current_extension = glob.glob(data_dir+f"/*{file_extension}")
 				if len(files_with_current_extension) == 1:
-					if "ctrl_tuning" in files_with_current_extension[0] and file_extension != "log":
+					if "ctrl_tuning" in files_with_current_extension[0]:
 						case_name += "_ctrl_tuning"
 					destination = results_dir+f"/{case_name.replace('/', '_')}{file_extension}"
 					shutil.move(files_with_current_extension[0], destination)
+					if "ctrl_tuning" in files_with_current_extension[0]:
+						case_name = case_name[::-1][12:][::-1]
 				else:
 					self.create_dir(results_dir+f"/{file_extension[1:]}")
 					for file in files_with_current_extension:
@@ -214,11 +213,6 @@ class Utils(IterDict):
 	def run(self, dir_htc_relates_to: str, change_params: dict, change_opt_file: list[str],
 	        incorporate_ctrl_tuning: list[str], change_param_type: str, n_parallel_processes: int,
 	        hawc2_use_from_hawc2s: list[tuple]):
-		if not skip_safety_warning:
-			if overwrite_existing_case == True:
-				if input("'overwrite_existing_case' is set to True. Do you wish to continue? y/n\n") != "y":
-					print("Run aborted.")
-					exit(0)
 		run_dir = os.path.realpath(os.path.dirname(__file__))
 		htc_wd = os.path.join(run_dir, dir_htc_relates_to)
 		os.chdir(htc_wd)
@@ -302,7 +296,8 @@ class Utils(IterDict):
 		hawc_prep = MoreHAWCIO()
 		
 		htc_base, case_name_base = htc_file_name, case_name
-		for change, opt_file_info, ctrl_tuning_file in zip_longest(changes, change_opt_file, incorporate_ctrl_tuning):
+		for change, opt_file_info, ctrl_tuning_file, _ in zip_longest(changes, change_opt_file, incorporate_ctrl_tuning,
+																	  [""]):
 			htc_dir = "htc"
 			results_dir = f"{root_results}/{case_name}"
 			# if changes wanted, create a temporary .htc directory and file that includes the changes
@@ -316,18 +311,18 @@ class Utils(IterDict):
 			elif opt_file_info is not None:  # prepare the slice of the .opt file and change the .htc accordingly
 				name = f"wsp_{opt_file_info[1][0]}_{opt_file_info[1][1]}"
 				dir_opt = opt_file_info[0][:opt_file_info[0].rfind("/")]
-				results_dir = os.path.join(dir_opt, name)
+				results_dir = os.path.join(dir_opt, name) if case_name == "" else os.path.join(results_dir, name)
 				self.create_dir(results_dir, overwrite=overwrite_existing_case,
-				                raise_exception=True)  # must be before slice_opt()
+								raise_exception=True)  # must be before slice_opt()
 				htc_dir, htc_file_name = hawc_prep.slice_opt(i_run, htc_wd, results_dir, htc_base, opt_file_info[0],
 				                                             opt_file_info[1])
 				case_name = case_name_base+f"_wsp_{opt_file_info[1][0]}_{opt_file_info[1][1]}"
 			else:  # incorporate control tuning
 				ctrl_tuning_file = ctrl_tuning_file.replace("\\", "/")
 				ctrl_tuning_dir = ctrl_tuning_file[:ctrl_tuning_file.rfind("/")]
+				results_dir = os.path.join(ctrl_tuning_dir, case_name)
 				htc_dir, htc_file_name, case_name = hawc_prep.incorporate_ctrl_tuning(i_run, ctrl_tuning_file, htc_wd,
 				                                                                      htc_base)
-				results_dir = os.path.join(ctrl_tuning_dir, "simulation_2step")
 				self.create_dir(results_dir, overwrite=overwrite_existing_case, raise_exception=True)
 				if len(hawc2_use_from_hawc2s) != 0:
 					hawc2s_htc_file = glob.glob(os.path.join(ctrl_tuning_dir, "*.htc"))[0]
