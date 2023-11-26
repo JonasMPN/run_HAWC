@@ -16,7 +16,7 @@ if __name__ == "__main__":
 	opt_file_to_be_saved = None
 	
 	change_param_type = "simultaneously"  # "simultaneously" or "consecutively"
-	n_parallel_processes = 2  # check yourself before you shrek yourself. I.e., check your CPU and RAM before you fry
+	n_parallel_processes = 1  # check yourself before you shrek yourself. I.e., check your CPU and RAM before you fry
 	# your PC with too many processes
 	
 	# Parameters that ought to be changed must be given as an iterable of the different values they should be. Since,
@@ -52,8 +52,8 @@ if __name__ == "__main__":
 	
 	case_dir = "data/output/ctrl_optimisation"
 	incorporate_ctrl_tuning = [
-			os.path.join("../output/ctrl_optimisation", dir_name, "ctrl_optimisation_ctrl_tuning.txt")
-			for dir_name in os.listdir(case_dir)
+			# os.path.join("../output/ctrl_optimisation", dir_name, "ctrl_optimisation_ctrl_tuning.txt")
+			# for dir_name in os.listdir(case_dir)
 	]
 	
 	hawc2_use_from_hawc2s = [
