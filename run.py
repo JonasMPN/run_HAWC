@@ -27,8 +27,8 @@ if __name__ == "__main__":
 	change_params = {
 			"hawcstab2": {
 					"operational_data" : {
-							# "opt_lambda": np.arange(7, 9).tolist(),
-							# "minpitch": np.arange(3, 5).tolist()
+							# "opt_lambda": np.arange(7, 9),
+							# "minpitch": np.arange(3, 5)
 					},
 					"controller_tuning": {
 							# "partial_load": [list(to_list) for to_list in list(itertools.product(freq, damping))],
