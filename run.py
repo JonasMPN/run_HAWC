@@ -93,7 +93,7 @@ class IterDict:
 						self.lengths.append(len(v))
 					except TypeError:
 						raise TypeError("The different values need to be collected in a list, but they were given as "
-						                f"{type(v)}.")
+										f"{type(v)}.")
 		
 		iter_for_length(changes)
 		return all([n_values == self.lengths[0] for n_values in self.lengths]), self.lengths
@@ -103,7 +103,7 @@ class IterDict:
 		if change_type not in implemented:
 			raise ValueError(f"'change_type' must be one of {implemented} but was {change_type}.")
 		perform = {
-				"consecutively" : self._consecutively,
+				"consecutively":  self._consecutively,
 				"simultaneously": self._simultaneously
 		}
 		return perform[change_type](changes) if any(self.check_equal_lengths(changes)[1]) else [None]
@@ -122,7 +122,7 @@ class IterDict:
 							self.consecutively.append([(self._blocks+f"{k}", value)])
 					except TypeError:
 						raise TypeError("The different values need to be collected in a list, but they were given as "
-						                f"{type(v)}.")
+										f"{type(v)}.")
 			self._blocks = self._blocks[:self._blocks[:-1].rfind(".")+1]
 		
 		iter_for_values(changes)
@@ -145,7 +145,7 @@ class IterDict:
 						self._tmp.append((self._blocks+f"{k}", v[index]))
 					except TypeError:
 						raise TypeError("The different values need to be collected in a list, but they were given as "
-						                f"{type(v)}.")
+										f"{type(v)}.")
 			self._blocks = self._blocks[:self._blocks[:-1].rfind(".")+1]
 		
 		for i in range(n_vars):
@@ -158,11 +158,11 @@ class IterDict:
 
 class Utils(IterDict):
 	def sort_files(self,
-	               results_dir: str,
-	               htc_dir: str,
-	               htc_file: str,
-	               case_name: str,
-	               opt_file_to_be_saved: str = None):
+				   results_dir: str,
+				   htc_dir: str,
+				   htc_file: str,
+				   case_name: str,
+				   opt_file_to_be_saved: str = None):
 		"""
 		Grabs all outputs from HAWC and copies them into the results directory. If a file extension of the outputs occurs
 		more than once, the respective files are collected in a subdirectory in the results directory. Additionally,
@@ -187,8 +187,8 @@ class Utils(IterDict):
 			dirs_with_wanted_data = {log_file[:log_file.rfind("/")], res_file[:res_file.rfind("/")]}
 		else:
 			raise ValueError("Could not figure out whether this is a hawc2s or hawc2mb run. Currently, a hawc2s run is "
-			                 "expected to have a 'hawcstab2' block in its .htc file; a hawc2mb run is expected to have a "
-			                 "'simulation' and 'output' block.")
+							 "expected to have a 'hawcstab2' block in its .htc file; a hawc2mb run is expected to have a "
+							 "'simulation' and 'output' block.")
 		for data_dir in dirs_with_wanted_data:
 			files_in_dir = [file for file in os.listdir(data_dir) if os.path.isfile(os.path.join(data_dir, file))]
 			file_extensions = {file[file.rfind("."):] for file in files_in_dir if
@@ -211,30 +211,30 @@ class Utils(IterDict):
 					shutil.rmtree(data_dir)
 	
 	def run(self, dir_htc_relates_to: str, change_params: dict, change_opt_file: list[str],
-	        incorporate_ctrl_tuning: list[str], change_param_type: str, n_parallel_processes: int,
-	        hawc2_use_from_hawc2s: list[tuple]):
+			incorporate_ctrl_tuning: list[str], change_param_type: str, n_parallel_processes: int,
+			hawc2_use_from_hawc2s: list[tuple]):
 		run_dir = os.path.realpath(os.path.dirname(__file__))
 		htc_wd = os.path.join(run_dir, dir_htc_relates_to)
 		os.chdir(htc_wd)
 		if sum([any(self.check_equal_lengths(change_params)[1]),
-		        len(change_opt_file) != 0,
-		        len(incorporate_ctrl_tuning) != 0]) > 1:
+				len(change_opt_file) != 0,
+				len(incorporate_ctrl_tuning) != 0]) > 1:
 			raise UserWarning(
 					"'change_params', 'change_opt_file', and 'incorporate_ctrl_tuning' are not supposed to be "
 					"used simultaneously.")
 		changes = self.to_list(change_params, change_param_type)
 		infos = self.prepare_multiprocessing(n_parallel_processes, htc_wd, hawc2_use_from_hawc2s, changes,
-		                                     change_opt_file, incorporate_ctrl_tuning)
+											 change_opt_file, incorporate_ctrl_tuning)
 		pool = Pool(processes=n_parallel_processes)
 		pool.map(self._run_one_processor, infos)
 		self.clean(hawc_type)
 	
 	@staticmethod
 	def create_dir(target: str,
-	               overwrite: bool = True,
-	               add_missing_parent_dirs: bool = True,
-	               raise_exception: bool = False,
-	               print_message: bool = True) -> tuple[str, bool]:
+				   overwrite: bool = True,
+				   add_missing_parent_dirs: bool = True,
+				   raise_exception: bool = False,
+				   print_message: bool = True) -> tuple[str, bool]:
 		"""
 		Handles the creation of a directory. Can keep/overwrite directories and creates ones arbitrary meany levels deep.
 		:param target: Directory to create
@@ -315,20 +315,22 @@ class Utils(IterDict):
 				self.create_dir(results_dir, overwrite=overwrite_existing_case,
 								raise_exception=True)  # must be before slice_opt()
 				htc_dir, htc_file_name = hawc_prep.slice_opt(i_run, htc_wd, results_dir, htc_base, opt_file_info[0],
-				                                             opt_file_info[1])
+															 opt_file_info[1])
 				case_name = case_name_base+f"_wsp_{opt_file_info[1][0]}_{opt_file_info[1][1]}"
 			else:  # incorporate control tuning
 				ctrl_tuning_file = ctrl_tuning_file.replace("\\", "/")
 				ctrl_tuning_dir = ctrl_tuning_file[:ctrl_tuning_file.rfind("/")]
-				results_dir = os.path.join(ctrl_tuning_dir, case_name)
+				if _ == "":
+					resdir_name = case_name
+				results_dir = os.path.join(ctrl_tuning_dir, resdir_name)
 				htc_dir, htc_file_name, case_name = hawc_prep.incorporate_ctrl_tuning(i_run, ctrl_tuning_file, htc_wd,
-				                                                                      htc_base)
+																					  htc_base)
 				self.create_dir(results_dir, overwrite=overwrite_existing_case, raise_exception=True)
 				if len(hawc2_use_from_hawc2s) != 0:
 					hawc2s_htc_file = glob.glob(os.path.join(ctrl_tuning_dir, "*.htc"))[0]
 					hawc_prep.incorporate_hawc2s_into_hawc2(hawc2s_htc_file,
-					                                        os.path.join(htc_dir, htc_file_name+".htc"),
-					                                        hawc2_use_from_hawc2s)
+															os.path.join(htc_dir, htc_file_name+".htc"),
+															hawc2_use_from_hawc2s)
 			
 			subprocess.call(f"{hawc_type} {htc_dir}/{htc_file_name}.htc")  # run hawc2s or hacw2mb
 			# move and/or copy results and files related to the current HAWC run into the results directory
@@ -386,7 +388,7 @@ class MoreHAWCIO(Utils):
 		return htc_dir, new_htc_file, name
 	
 	def slice_opt(self, i_run: int, base_dir: str, results_dir: str, htc_base_file: str, opt_file: str,
-	              wind_speed_range: tuple):
+				  wind_speed_range: tuple):
 		"""
 		Loads the base .opt file, takes a slice based on the wind speed range, and saves it in the results directory.
 		:param base_dir:
@@ -471,5 +473,4 @@ class MoreHAWCIO(Utils):
 
 if __name__ == "__main__":
 	Utils().run(dir_htc_relates_to, change_params, change_opt_file, incorporate_ctrl_tuning, change_param_type,
-	            n_parallel_processes, hawc2_use_from_hawc2s)
-
+				n_parallel_processes, hawc2_use_from_hawc2s)
